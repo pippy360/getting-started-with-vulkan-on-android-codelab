@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "src/first_app.hpp"
 #include <iostream>
 
 #include "hellovk.h"
@@ -41,7 +42,7 @@
  */
 struct VulkanEngine {
   struct android_app *app;
-  vkt::HelloVK *app_backend;
+  lve::FirstApp *app_backend;
   bool canRender = false;
 };
 
@@ -55,7 +56,7 @@ static void HandleCmd(struct android_app *app, int32_t cmd) {
     case APP_CMD_START:
       if (engine->app->window != nullptr) {
         engine->app_backend->reset(app->window, app->activity->assetManager);
-        engine->app_backend->initVulkan();
+        engine->app_backend->init();
         engine->canRender = true;
       }
     case APP_CMD_INIT_WINDOW:
@@ -64,9 +65,10 @@ static void HandleCmd(struct android_app *app, int32_t cmd) {
       if (engine->app->window != nullptr) {
         LOGI("Setting a new surface");
         engine->app_backend->reset(app->window, app->activity->assetManager);
-        if (!engine->app_backend->initialized) {
+        if (!engine->app_backend->isInitialized()) {
           LOGI("Starting application");
-          engine->app_backend->initVulkan();
+            engine->app_backend->init();
+            engine->app_backend->run();
         }
         engine->canRender = true;
       }
@@ -78,7 +80,7 @@ static void HandleCmd(struct android_app *app, int32_t cmd) {
     case APP_CMD_DESTROY:
       // The window is being hidden or closed, clean it up.
       LOGI("Destroying");
-      engine->app_backend->cleanup();
+//      engine->app_backend->cleanup();
     default:
       break;
   }
@@ -123,10 +125,10 @@ static void HandleInputEvents(struct android_app *app) {
  */
 void android_main(struct android_app *state) {
   VulkanEngine engine{};
-  vkt::HelloVK vulkanBackend{};
+  lve::FirstApp firstApp{};
 
   engine.app = state;
-  engine.app_backend = &vulkanBackend;
+  engine.app_backend = &firstApp;
   state->userData = &engine;
   state->onAppCmd = HandleCmd;
 
@@ -146,6 +148,6 @@ void android_main(struct android_app *state) {
 
     HandleInputEvents(state);
 
-    engine.app_backend->render();
+//    engine.app_backend->render();
   }
 }
